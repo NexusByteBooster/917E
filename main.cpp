@@ -5,17 +5,18 @@
 #include "pros/misc.h"
 #include "pros/motors.h"
 #include "pros/rotation.hpp"
+#include "pros/rtos.hpp"
 
-// controller
+// controller introduction
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
 
-constexpr int CLAMP = 'A';
-constexpr int OPTICAL_PORT = 4;
+constexpr int CLAMP = 'A'; // constant for our mogo mech port
+constexpr int OPTICAL_PORT = 4; // constant for our optical sensor for color sorting
 
 // motor groups
-pros::MotorGroup leftMotors({-15, -20, 16}, pros::MotorGearset::blue); // left motor group - ports 3 (reversed), 4, 5 (reversed)
-pros::MotorGroup rightMotors({18, -19, 17}, pros::MotorGearset::blue); // right motor group - ports 6, 7, 9 (reversed)
-pros::Motor intake(10, pros::MotorGearset::blue);
+pros::MotorGroup leftMotors({-15, -20, 19}, pros::MotorGearset::blue); // left motor group - ports 3 (reversed), 4, 5 (reversed)
+pros::MotorGroup rightMotors({18, 17, -16 }, pros::MotorGearset::blue); // right motor group - ports 6, 7, 9 (reversed)
+pros::Motor intake(7, pros::MotorGearset::blue);
 pros::adi::DigitalOut clamp(CLAMP);
 pros::Motor arm(11);
 pros::Rotation rotation_sensor(8);
@@ -125,6 +126,7 @@ void disabled() {}
 /**
  * runs after initialize if the robot is connected to field control
  */
+
 void competition_initialize() {}
 
 // get a path used for pure pursuit
@@ -141,37 +143,19 @@ ASSET(example_txt); // '.' replaced with "_" to make c++ happy
 const int DRIVE_SPEED = 600;  // Speed at which the robot drives
 const int LIFT_SPEED = 100;    // Speed at which the lift moves 
 
-
 void autonomous() {
     // Stop driving
     intake.set_encoder_units(pros::E_MOTOR_ENCODER_ROTATIONS);
     chassis.setPose(0,0,0);
-    //chassis.turnToHeading(90, 1000);
-    chassis.turnToHeading(180, 1000);  //EXTRA
-    chassis.moveToPoint(24, 0,1000); 
-    chassis.turnToHeading(0, 1000,{.direction = AngularDirection::CCW_COUNTERCLOCKWISE});
-    chassis.moveToPoint(24, -12,1000, {.forwards = false});
+    chassis.turnToHeading(90, 1500);
+    chassis.moveToPoint(24, 0,1500); 
+    chassis.turnToHeading(0, 1500,{.direction = AngularDirection::CCW_COUNTERCLOCKWISE});
+    chassis.moveToPoint(24, -12,1500, {.forwards = false});
+    pros::delay(1500);
+    intake.move_absolute(200, 580);
     pros::delay(500);
-    intake.move_absolute(300, 600);
-    chassis.moveToPoint(24, 12, 1000);
-    chassis.turnToHeading(125, 1000);
-    chassis.moveToPoint(0, 48, 1000, {.forwards = false});
-    clamp.set_value(true);
-    pros::delay(500);
-    intake.move_absolute(4000, 600);
-    chassis.turnToHeading(135, 2000);
-    chassis.moveToPoint(-24, 48, 1500);
-    chassis.turnToHeading(45, 1000);
-    clamp.set_value(false);
-    chassis.moveToPoint(0, 60, 1500);
-
-    //MOGO RUSH
-    chassis.turnToHeading(-115, 700, {.direction = AngularDirection::CCW_COUNTERCLOCKWISE});
-    clamp.set_value(true);
-    chassis.moveToPoint(24, 60, 2000, {.forwards = false});
-    pros::delay(500);
-    chassis.moveToPoint(0, 0, 1000);
-}
+    chassis.moveToPoint(24, 36, 1500);
+} 
 
 /**
  * Runs in driver control
@@ -188,10 +172,10 @@ void opcontrol() {
         // delay to save resources
       arm.set_encoder_units(pros::E_MOTOR_ENCODER_ROTATIONS);
       if (controller.get_digital(DIGITAL_R1)){
-        intake.move_velocity(600); // This is 600 because it's a 600rpm motor
+        intake.move_velocity(590); // This is 600 because it's a 600rpm motor
       }
       else if (controller.get_digital(DIGITAL_R2)) {
-        intake.move_velocity(-600);
+        intake.move_velocity(-590);
       }
       else {
         intake.move_velocity(0);
@@ -206,14 +190,16 @@ void opcontrol() {
       else {
         arm.move_velocity(0);
       }
-      if (controller.get_digital(DIGITAL_X)) {clamp.set_value(true);}
+      if (controller.get_digital(DIGITAL_Y)) {clamp.set_value(true);}
       if (controller.get_digital(DIGITAL_B)) {clamp.set_value(false);}
+      intake.set_encoder_units(pros::E_MOTOR_ENCODER_DEGREES);
+      int hue = optical_sensor.get_hue();  // Get hue value from the optical sensor 
+        if (hue > 200 && hue < 260) {  // Blue object detected
+          pros::delay(20);
+          intake.move_velocity(0);
+        }
 
- 
-      pros::delay(10);
-      //while (optical_sensor.get_hue() == 0)
-      //;
-        //pros::delay(250);
-        //intake.move_velocity(0);
+        // Delay to prevent excessive polling of the optical sensor
+        pros::delay(50);
     }
 }
