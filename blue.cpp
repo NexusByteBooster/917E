@@ -11,7 +11,8 @@
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
 
 constexpr int CLAMP = 'A'; // constant for our mogo mech port
-constexpr int OPTICAL_PORT = 4; // constant for our optical sensor for color sorting99
+constexpr int OPTICAL_PORT = 4; // constant for our optical sensor for color sorting
+
 // motor groups
 pros::MotorGroup leftMotors({11, -12, -14}, pros::MotorGearset::blue); // left motor group - ports 3 (reversed), 4, 5 (reversed)
 pros::MotorGroup rightMotors({-15, 16, 18 }, pros::MotorGearset::blue); // right motor group - ports 6, 7, 9 (reversed)
@@ -67,13 +68,13 @@ lemlib::OdomSensors sensors(nullptr, // vertical tracking wheel
 );
 lemlib::ExpoDriveCurve throttleCurve(3, // joystick deadband out of 127
                                      10, // minimum output where chassis will move out of 127
-                                     1.53 // expo curve gain
+                                     1.019 // expo curve gain
 );
 
 // input curve for steer input during driver control
 lemlib::ExpoDriveCurve steerCurve(3, // joystick deadband out of 127
                                   10, // minimum output where chassis will move out of 127
-                                  1.5 // expo curve gain
+                                  1.019 // expo curve gain
 );
 
 // chassis settings
@@ -143,29 +144,33 @@ const int DRIVE_SPEED = 600;  // Speed at which the robot drives
 const int LIFT_SPEED = 100;    // Speed at which the lift moves 
 
 void autonomous() {
-    // Stop driving
+    // add arm score on allaince stake!!@!!!!!
     intake.set_encoder_units(pros::E_MOTOR_ENCODER_ROTATIONS);
-    chassis.setPose(0,0,0);
-    chassis.turnToHeading(90, 1000);
-    chassis.moveToPoint(20, 0,1000); 
-    chassis.turnToHeading(0, 1000,{.direction = AngularDirection::CCW_COUNTERCLOCKWISE});
-    chassis.moveToPoint(20, -12,1000, {.forwards = false});
-    pros::delay(1000);
-    intake.move_absolute(200, 580);
-    pros::delay(500);
-    chassis.moveToPoint(20, 12, 1000);
-    chassis.turnToHeading(125, 1000);
+    chassis.setPose(0,0,180);
     clamp.set_value(true);
-    chassis.moveToPoint(0, 30, 1000, {.forwards = false});
-    pros::delay(1000);
+    pros::delay(1100);
+    chassis.moveToPoint(0, 31,1000, {.forwards = false});
+    pros::delay(1100);
     clamp.set_value(false);
+    pros::delay(1100);
+    intake.move_velocity(550);
     pros::delay(1000);
-    intake.move_velocity(580);
-    chassis.turnToHeading(270, 1000);
-    chassis.moveToPoint(-12, 30, 1000);
-    chassis.turnToHeading(90, 1000);
-    chassis.moveToPoint(0, 60, 1000);
-}
+    intake.move_velocity(-550);
+    pros::delay(750);
+    intake.move_velocity(550);
+    chassis.turnToHeading(270, 750);
+    intake.move_velocity(550);
+    chassis.moveToPoint(-26, 36, 800);
+    pros::delay(1000);
+    intake.move_velocity(-550);
+    pros::delay(750);
+    intake.move_velocity(550);
+    pros::delay(750);
+    chassis.turnToHeading(180, 750,{.direction = AngularDirection::CCW_COUNTERCLOCKWISE});
+    chassis.moveToPoint(-26, 12, 800);
+    chassis.turnToHeading(225, 750);
+    //take measurments of the doinker
+} 
 
 /**
  * Runs in driver control
@@ -176,16 +181,16 @@ void opcontrol() {
     while (true) {
         // get joystick positions
         int leftY = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
-        int rightX = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X );
+        int rightX = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
         // move the chassis with curvature drive
         chassis.arcade(leftY, rightX);
         // delay to save resources
       arm.set_encoder_units(pros::E_MOTOR_ENCODER_ROTATIONS);
       if (controller.get_digital(DIGITAL_R1)){
-        intake.move_velocity(590); // This is 600 because it's a 600rpm motor
+        intake.move_velocity(495); // This is 600 because it's a 600rpm motor
       }
       else if (controller.get_digital(DIGITAL_R2)) {
-        intake.move_velocity(-590);
+        intake.move_velocity(-495);
       }
       else {
         intake.move_velocity(0);
@@ -193,9 +198,6 @@ void opcontrol() {
 
       if (controller.get_digital(DIGITAL_L1)) {
         arm.move_velocity(300); // This is 600 because it's a 600rpm motor
-        intake.move_velocity(-590);
-        pros::delay(100);
-        intake.move_velocity(0);
       }
       else if (controller.get_digital(DIGITAL_L2)) {
         arm.move_velocity(-300);
@@ -203,7 +205,7 @@ void opcontrol() {
       else {
         arm.move_velocity(0);
       }
-      if (controller.get_digital(DIGITAL_Y)) {clamp.set_value(true);}
+      if (controller.get_digital(DIGITAL_X)) {clamp.set_value(true);}
       if (controller.get_digital(DIGITAL_B)) {clamp.set_value(false);}
       intake.set_encoder_units(pros::E_MOTOR_ENCODER_DEGREES);
       int hue = optical_sensor.get_hue();  // Get hue value from the optical sensor 
