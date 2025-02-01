@@ -6,6 +6,7 @@
 #include "pros/motors.h"
 #include "pros/rotation.hpp"
 #include "pros/rtos.hpp"
+#include <future>
 
 // controller introduction
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
@@ -128,9 +129,6 @@ void disabled() {}
 
 void competition_initialize() {}
 
-// get a path used for pure pursuit
-// this needs to be put outside a function
-ASSET(example_txt); // '.' replaced with "_" to make c++ happy
 
 /**
  * Runs during auto
@@ -144,27 +142,62 @@ const int LIFT_SPEED = 100;    // Speed at which the lift moves
 
 void autonomous() {
     // Stop driving
-    intake.set_encoder_units(pros::E_MOTOR_ENCODER_ROTATIONS);
-    chassis.setPose(0,0,0);
-    chassis.turnToHeading(90, 1000);
-    chassis.moveToPoint(20, 0,1000); 
-    chassis.turnToHeading(0, 1000,{.direction = AngularDirection::CCW_COUNTERCLOCKWISE});
-    chassis.moveToPoint(20, -12,1000, {.forwards = false});
-    pros::delay(1000);
-    intake.move_absolute(200, 580);
-    pros::delay(500);
-    chassis.moveToPoint(20, 12, 1000);
-    chassis.turnToHeading(125, 1000);
+    chassis.setPose(0, -4, 0);
+    intake.move_velocity(600);
+    pros::delay(1100);
+    chassis.moveToPoint(0, 7, 1100);
+    clamp.set_value(false);
+    chassis.turnToHeading(270, 1100, {.direction = AngularDirection::CCW_COUNTERCLOCKWISE});
+    chassis.moveToPoint(21, 7, 2000, {.forwards = false, .maxSpeed = 90}, true);
+    chassis.waitUntil(21);
     clamp.set_value(true);
-    chassis.moveToPoint(0, 30, 1000, {.forwards = false});
+    pros::delay(2000);
+    chassis.moveToPoint(20, 7, 1000);                                                                                                             
+    chassis.turnToHeading(0, 1100);
+    chassis.moveToPoint(20, 30, 1100);
+    chassis.turnToHeading(60, 1100);
+    chassis.moveToPoint(48, 48, 1500);
+    chassis.moveToPoint(39, 45, 1100, {.forwards = false});
+    chassis.turnToHeading(180, 1500);
+    chassis.moveToPoint(39, 18, 2000);
+    chassis.moveToPoint(39, 4, 2500);
+    chassis.moveToPoint(39, -1, 2500);
+    chassis.moveToPoint(39, 10, 3500, {.forwards = false});
+    chassis.turnToHeading(90, 1100, {.direction = AngularDirection::CCW_COUNTERCLOCKWISE});
+    chassis.moveToPoint(42, 10, 2000);
+    chassis.moveToPoint(39, 10, 2000, {.forwards = false});
+    chassis.turnToHeading(350, 1100);
+    chassis.moveToPoint(51, -8, 1100, {.forwards = false});
     pros::delay(1000);
     clamp.set_value(false);
     pros::delay(1000);
-    intake.move_velocity(580);
-    chassis.turnToHeading(270, 1000);
-    chassis.moveToPoint(-12, 30, 1000);
+    chassis.moveToPoint(36, 16, 1500);
+    chassis.turnToHeading(358, 1000);
+    clamp.set_value(false);
+    chassis.moveToPoint(36, 3, 1000, {.forwards = false});
     chassis.turnToHeading(90, 1000);
-    chassis.moveToPoint(0, 60, 1000);
+    chassis.moveToPoint(-12, 3, 1000, {.forwards = false, .maxSpeed = 90});
+    chassis.moveToPoint(-31, 3, 2000, {.forwards = false, .maxSpeed = 90}, true);
+    chassis.waitUntil(19);
+    clamp.set_value(true);
+    pros::delay(3000);
+    chassis.turnToHeading(270, 1000);
+    chassis.moveToPoint(-42, 3, 1500);
+    chassis.moveToPoint(-48, 3, 1500);
+    chassis.turnToHeading(0, 1000);
+    chassis.moveToPoint(-48, 44, 2000);
+    chassis.moveToPoint(-54, -6, 2000, {.forwards = false});
+    pros::delay(1200);
+    clamp.set_value(false);
+    pros::delay(1720);
+    chassis.moveToPoint(-48, 30, 1500);
+    chassis.turnToHeading(50, 1500);
+    clamp.set_value(false);
+    chassis.moveToPoint(0, 120, 2000);
+    chassis.turnToHeading(90, 1500);
+    chassis.moveToPoint(-48, 120, 4500);
+    chassis.moveToPoint(-54, 120, 5000);
+
 }
 
 /**
